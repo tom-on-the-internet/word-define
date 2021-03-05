@@ -6,6 +6,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -144,6 +145,9 @@ func main() {
 func run() error {
 	var word Word
 
+	flag.Bool("audio", false, "plays audio of word if exists")
+	flag.Parse()
+
 	searchTerm, err := getSearchTerm()
 	if err != nil {
 		return err
@@ -174,12 +178,11 @@ func run() error {
 }
 
 func getSearchTerm() (string, error) {
-	argsWithoutProg := os.Args[1:]
-	if len(argsWithoutProg) == 0 {
+	if len(flag.Args()) == 0 {
 		return "", errNoSearchTerm
 	}
 
-	searchTerm := strings.ToLower(argsWithoutProg[0])
+	searchTerm := strings.ToLower(flag.Arg(0))
 
 	return searchTerm, nil
 }
