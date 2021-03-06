@@ -1,8 +1,5 @@
 package main
 
-// TODO
-// play audio when asked
-
 import (
 	"encoding/json"
 	"errors"
@@ -36,7 +33,6 @@ type Entry struct {
 	Definition  string   `json:"definition"`
 	Examples    []string `json:"examples"`
 	Etymologies []string `json:"etymologies"`
-	AudioLink   string   `json:"audioLink"`
 }
 
 type Word struct {
@@ -145,9 +141,6 @@ func main() {
 func run() error {
 	var word Word
 
-	flag.Bool("audio", false, "plays audio of word if exists")
-	flag.Parse()
-
 	searchTerm, err := getSearchTerm()
 	if err != nil {
 		return err
@@ -178,6 +171,8 @@ func run() error {
 }
 
 func getSearchTerm() (string, error) {
+	flag.Parse()
+
 	if len(flag.Args()) == 0 {
 		return "", errNoSearchTerm
 	}
@@ -396,7 +391,6 @@ func makeEntry(oxfordEntry OxfordEntry, oxfordSense OxfordSense) (Entry, error) 
 
 	entry.Definition = oxfordSense.Definitions[0]
 	entry.Etymologies = oxfordEntry.Etymologies
-	entry.AudioLink = oxfordEntry.Pronunciations[0].AudioFile
 
 	for _, example := range oxfordEntry.Senses[0].Examples {
 		entry.Examples = append(entry.Examples, example.Text)
