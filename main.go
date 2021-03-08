@@ -246,6 +246,9 @@ func createCacheIfNotExists() error {
 		return err
 	}
 
+	// create directory if not exists
+	_ = os.Mkdir(userCacheDir, 0700)
+
 	appCachedir := userCacheDir + "/word-define"
 	cacheFilename := appCachedir + "/dict.json"
 
@@ -272,6 +275,9 @@ func createConfigIfNotExists() error {
 	if err != nil {
 		return err
 	}
+
+	// create directory if not exists
+	_ = os.Mkdir(userConfigDir, 0700)
 
 	appConfigdir := userConfigDir + "/word-define"
 	configFilename := appConfigdir + "/config.json"
