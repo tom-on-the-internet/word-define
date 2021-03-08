@@ -1,3 +1,3 @@
 # Word Define
 
-work in progress
+work in progress!
