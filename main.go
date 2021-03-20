@@ -139,13 +139,6 @@ func createCacheIfNotExists() error {
 
 	// create file if not exists
 	if _, err := os.Stat(cacheFilename); os.IsNotExist(err) {
-		file, err := os.OpenFile(cacheFilename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0700)
-		if err != nil {
-			return err
-		}
-
-		file.Close()
-
 		return ioutil.WriteFile(cacheFilename, []byte("{}"), 0600)
 	}
 
@@ -169,13 +162,6 @@ func createConfigIfNotExists() error {
 
 	// create file if not exists
 	if _, err := os.Stat(configFilename); os.IsNotExist(err) {
-		file, err := os.OpenFile(configFilename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0700)
-		if err != nil {
-			return err
-		}
-
-		file.Close()
-
 		var config Config
 
 		configJSON, _ := json.MarshalIndent(config, "", "  ")
