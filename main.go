@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -21,8 +20,6 @@ func main() {
 }
 
 func run() error {
-	var word Word
-
 	searchTerm, err := getSearchTerm()
 	if err != nil {
 		return err
@@ -37,19 +34,20 @@ func run() error {
 		return errInvalidConfig
 	}
 
-	if config.Cache {
-		word, err = getWordMaybeCached(searchTerm, config)
-		if err != nil {
-			return err
-		}
-	} else {
-		word, err = getWordNotCached(searchTerm, config)
-		if err != nil {
-			return err
-		}
+	word, err := getWord(searchTerm, config)
+	if err != nil {
+		return err
 	}
 
 	return printResult(word)
+}
+
+func getWord(searchTerm string, config Config) (Word, error) {
+	if config.Cache {
+		return getWordMaybeCached(searchTerm, config)
+	}
+
+	return getWordNotCached(searchTerm, config)
 }
 
 func getSearchTerm() (string, error) {
@@ -62,140 +60,6 @@ func getSearchTerm() (string, error) {
 	searchTerm := strings.ToLower(flag.Arg(0))
 
 	return searchTerm, nil
-}
-
-func getConfig() (Config, error) {
-	var config Config
-
-	err := createConfigIfNotExists()
-	if err != nil {
-		return config, err
-	}
-
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		return config, err
-	}
-
-	appConfigDir := userConfigDir + "/word-define"
-	configFilename := appConfigDir + "/config.json"
-
-	bytes, err := ioutil.ReadFile(configFilename)
-	if err != nil {
-		return config, err
-	}
-
-	err = json.Unmarshal(bytes, &config)
-	if err != nil {
-		// json was invalid, write empty json
-		configJSON, _ := json.MarshalIndent(config, "", "  ")
-		err = ioutil.WriteFile(configFilename, configJSON, 0600)
-	}
-
-	return config, err
-}
-
-func getCache() (map[string]Word, error) {
-	wordMap := make(map[string]Word)
-
-	err := createCacheIfNotExists()
-	if err != nil {
-		return wordMap, err
-	}
-
-	cacheFilename, err := getCacheFilename()
-	if err != nil {
-		return wordMap, err
-	}
-
-	bytes, err := ioutil.ReadFile(cacheFilename)
-	if err != nil {
-		return wordMap, err
-	}
-
-	err = json.Unmarshal(bytes, &wordMap)
-	if err != nil {
-		// json was invalid, write empty json
-		ioutil.WriteFile(cacheFilename, []byte("{}"), 600)
-	}
-
-	return wordMap, nil
-}
-
-func createCacheIfNotExists() error {
-	userCacheDir, err := os.UserCacheDir()
-	if err != nil {
-		return err
-	}
-
-	// create directory if not exists
-	_ = os.Mkdir(userCacheDir, 0700)
-
-	appCachedir := userCacheDir + "/word-define"
-	cacheFilename := appCachedir + "/dict.json"
-
-	// create directory if not exists
-	_ = os.Mkdir(appCachedir, 0700)
-
-	// create file if not exists
-	if _, err := os.Stat(cacheFilename); os.IsNotExist(err) {
-		return ioutil.WriteFile(cacheFilename, []byte("{}"), 0600)
-	}
-
-	return nil
-}
-
-func createConfigIfNotExists() error {
-	userConfigDir, err := os.UserConfigDir()
-	if err != nil {
-		return err
-	}
-
-	// create directory if not exists
-	_ = os.Mkdir(userConfigDir, 0700)
-
-	appConfigdir := userConfigDir + "/word-define"
-	configFilename := appConfigdir + "/config.json"
-
-	// create directory if not exists
-	_ = os.Mkdir(appConfigdir, 0700)
-
-	// create file if not exists
-	if _, err := os.Stat(configFilename); os.IsNotExist(err) {
-		var config Config
-
-		configJSON, _ := json.MarshalIndent(config, "", "  ")
-
-		return ioutil.WriteFile(configFilename, configJSON, 0600)
-	}
-
-	return nil
-}
-
-func getCacheFilename() (string, error) {
-	userCacheDir, err := os.UserCacheDir()
-	appCachedir := userCacheDir + "/word-define"
-	cacheFilename := appCachedir + "/dict.json"
-
-	return cacheFilename, err
-}
-
-func writeCache(wordMap map[string]Word) error {
-	cacheFilename, err := getCacheFilename()
-	if err != nil {
-		return err
-	}
-
-	outputFile, err := os.OpenFile(cacheFilename, os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	defer outputFile.Close()
-
-	wordMapJSON, _ := json.MarshalIndent(wordMap, "", "  ")
-
-	return ioutil.WriteFile(cacheFilename, wordMapJSON, 0600)
 }
 
 func printResult(word Word) error {
@@ -273,6 +137,8 @@ func makeEntry(oxfordEntry OxfordEntry, oxfordSense OxfordSense) (Entry, error) 
 	return entry, nil
 }
 
+// Gets word from OxfordResponse.
+// Unfortunately has to loop quite a bit.
 func makeWordFromResponse(responseData OxfordResponse) (Word, error) {
 	var word Word
 
@@ -297,17 +163,18 @@ func makeWordFromResponse(responseData OxfordResponse) (Word, error) {
 }
 
 // Gets word from cache or remote source.
+// This is run for users who have the cache enabled.
 func getWordMaybeCached(searchTerm string, config Config) (Word, error) {
 	var word Word
 
-	wordMap, err := getCache()
+	cache, err := getCache()
 	if err != nil {
 		return word, err
 	}
 
-	word, ok := wordMap[searchTerm]
+	word, ok := cache[searchTerm]
 	if ok {
-		if word.Spelling == "" {
+		if !word.hasDefinition() {
 			return word, errNoDefinitionsFound
 		}
 
@@ -319,14 +186,14 @@ func getWordMaybeCached(searchTerm string, config Config) (Word, error) {
 		return word, err
 	}
 
-	wordMap[searchTerm] = word
+	cache[searchTerm] = word
 
-	err = writeCache(wordMap)
+	err = writeCache(cache)
 	if err != nil {
 		return word, err
 	}
 
-	if word.Spelling == "" {
+	if !word.hasDefinition() {
 		return word, errNoDefinitionsFound
 	}
 

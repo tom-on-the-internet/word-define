@@ -20,3 +20,9 @@ type Word struct {
 	Spelling string
 	Entries  []Entry `json:"entries"`
 }
+
+func (w Word) hasDefinition() bool {
+	return len(w.Entries) > 1
+}
+
+type Cache map[string]Word
