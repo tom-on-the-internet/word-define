@@ -62,6 +62,8 @@ func getSearchTerm() (string, error) {
 	return searchTerm, nil
 }
 
+// Essentially the render function
+// Prints out to stdout.
 func printResult(word Word) error {
 	fmt.Println("[ " + strings.ToUpper(word.Spelling) + " ]")
 
