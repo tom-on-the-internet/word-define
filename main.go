@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -12,33 +11,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-var (
-	errNoDefinitionsFound = errors.New("no definitions found")
-	errNoSearchTerm       = errors.New("no search term provided")
-	errInvalidConfig      = errors.New("config invalid. must have a valid app key and id")
-)
-
-type Config struct {
-	AppKey string `json:"appKey"`
-	AppID  string `json:"appId"`
-	Cache  bool   `json:"cache"`
-}
-
-func (c Config) valid() bool {
-	return c.AppKey != "" && c.AppID != ""
-}
-
-type Entry struct {
-	Definition  string   `json:"definition"`
-	Examples    []string `json:"examples"`
-	Etymologies []string `json:"etymologies"`
-}
-
-type Word struct {
-	Spelling string
-	Entries  []Entry `json:"entries"`
-}
 
 func main() {
 	err := run()
