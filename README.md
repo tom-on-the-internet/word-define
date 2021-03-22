@@ -2,6 +2,10 @@
 
 A cli dictionary client for the Oxford English Dictionary.
 
+## Video
+
+[https://youtu.be/RNW_4nCzG0A](https://youtu.be/RNW_4nCzG0A)
+
 ## Installation
 
 1. Install Go and run `go get github.com/tom-on-the-internet/word-define`. Alternatively, download the latest release of word-define from GitHub.
