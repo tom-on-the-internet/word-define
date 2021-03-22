@@ -4,17 +4,15 @@ A cli dictionary client for the Oxford English Dictionary.
 
 ## Installation
 
-1. Install Go.
+1. Install Go and run `go get github.com/tom-on-the-internet/word-define`. Alternatively, download the latest release of word-define from GitHub.
 
-2. `go get github.com/tom-on-the-internet/word-define`
+2. Run the command once to create config. `word-define example`
 
-3. Run the command once to create config. `word-define example`
+3. Get a _free_ `AppID` and `AppKey` from [https://developer.oxforddictionaries.com/](https://developer.oxforddictionaries.com/). This allows you 1000 definition lookups a month. Quick math: about 30 definitions a day.
 
-4. Get a _free_ `AppID` and `AppKey` from [https://developer.oxforddictionaries.com/](https://developer.oxforddictionaries.com/). This allows you 1000 definition lookups a month. Quick math: about 30 definitions a day.
+4. Add your `AppID` and `AppKey` to `$HOME/.config/word-define`.
 
-5. Add your `AppID` and `AppKey` to `$HOME/.config/word-define`.
-
-6. Done!
+5. Done!
 
 ## Usage
 

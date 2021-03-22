@@ -22,7 +22,7 @@ type Word struct {
 }
 
 func (w Word) hasDefinition() bool {
-	return len(w.Entries) > 1
+	return len(w.Entries) > 0
 }
 
 type Cache map[string]Word
